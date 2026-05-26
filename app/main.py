@@ -1,19 +1,18 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import pickle
 from pathlib import Path
 from sentence_transformers import util
 
 app = FastAPI(title="Scholarship Recommendation Web App")
-templates = Jinja2Templates(directory="app/templates")
 
-
-# Load embeddings and scholarship list
+# Templates resolve relative to this file so it works both locally and on Render
 BASE_DIR = Path(__file__).resolve().parent.parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
+
+# Load pre-computed embeddings and scholarship list
 model_path = BASE_DIR / "workspace" / "Models" / "sbert"
-#model_path = Path("../workspace/Models/sbert")
-# Load embeddings and scholarship list
 
 with open(model_path / "profile_embeddings.pkl", "rb") as f:
     profile_embeddings = pickle.load(f)
@@ -23,6 +22,13 @@ with open(model_path / "scholarship_list.pkl", "rb") as f:
     scholarships = pickle.load(f)
 
 similarity_scores = util.cos_sim(profile_embeddings, scholarship_embeddings)
+
+
+@app.get("/health")
+def health():
+    """Health check endpoint used by Render."""
+    return JSONResponse({"status": "ok", "scholarships_loaded": len(scholarships)})
+
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):

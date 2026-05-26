@@ -1,20 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scholarship Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy: #0f2040;
+            --gold: #c9993a;
+            --gold-light: #f0c96e;
+            --bg: #f7f5f0;
+            --card: #ffffff;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --border: #e5e0d8;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 3rem 2rem;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.15s;
+        }
+
+        .back-link:hover { color: var(--navy); }
+
+        .header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.9rem;
+            color: var(--navy);
+            line-height: 1.2;
+        }
+
+        .accent-line {
+            width: 40px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 2px;
+            margin: 0.7rem 0 1rem;
+        }
+
+        .profile-strip {
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .profile-chip {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 0.4rem 1rem;
+            font-size: 0.84rem;
+            color: var(--text);
+        }
+
+        .profile-chip span {
+            color: var(--muted);
+            margin-right: 0.3rem;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .scholarship-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+
+        .scholarship-card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+            transform: translateY(-1px);
+        }
+
+        .rank-badge {
+            min-width: 36px;
+            height: 36px;
+            background: var(--navy);
+            color: var(--gold-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            flex: 1;
+        }
+
+        .scholarship-name {
+            font-size: 0.97rem;
+            font-weight: 600;
+            color: var(--navy);
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .score-bar {
+            flex: 1;
+            height: 5px;
+            background: var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+            border-radius: 999px;
+        }
+
+        .score-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gold);
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .empty-state p {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-back {
+            display: inline-block;
+            padding: 0.7rem 1.6rem;
+            background: var(--navy);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-back:hover { background: #1a3560; }
+    </style>
 </head>
 <body>
-    <h1>Recommendations for Student {{ student_index }}</h1>
-    <p>CGPA: {{ cgpa }} | Family Income: {{ income }}</p>
+    <div class="wrapper">
+        <a href="/" class="back-link">&larr; New Search</a>
 
-    <h2>Top Scholarships:</h2>
-    <ul>
-        {% for rec in recommendations %}
-            <li>{{ rec["scholarship"] }} (Score: {{ rec["score"] }})</li>
-        {% endfor %}
-    </ul>
+        <div class="header">
+            <h1>Recommendations for Student #{{ student_index }}</h1>
+            <div class="accent-line"></div>
 
-    <a href="/">Back</a>
+            <div class="profile-strip">
+                <div class="profile-chip"><span>CGPA</span>{{ cgpa }}</div>
+                <div class="profile-chip"><span>Income</span>{{ income }} ETB</div>
+            </div>
+        </div>
+
+        {% if recommendations %}
+            <p class="section-label">Top Matches &mdash; {{ recommendations|length }} found</p>
+
+            {% for rec in recommendations %}
+            <div class="scholarship-card">
+                <div class="rank-badge">{{ loop.index }}</div>
+                <div class="card-body">
+                    <div class="scholarship-name">{{ rec["scholarship"] }}</div>
+                    <div class="score-bar-wrap">
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: {{ (rec['score'] * 100)|round }}%"></div>
+                        </div>
+                        <div class="score-text">{{ (rec['score'] * 100)|round(1) }}% match</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div style="margin-top:2rem; text-align:center;">
+                <a href="/" class="btn-back">Search Again</a>
+            </div>
+
+        {% else %}
+            <div class="empty-state">
+                <p>No scholarships matched your current profile and eligibility criteria.</p>
+                <a href="/" class="btn-back">Try Again</a>
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>
-

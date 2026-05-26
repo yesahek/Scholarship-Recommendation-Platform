@@ -1,21 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scholarship Recommendation</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy: #0f2040;
+            --gold: #c9993a;
+            --gold-light: #f0c96e;
+            --bg: #f7f5f0;
+            --card: #ffffff;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --border: #e5e0d8;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--navy);
+            color: var(--gold-light);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.1rem;
+            color: var(--navy);
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2.2rem 2rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+
+        .field {
+            margin-bottom: 1.4rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--navy);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 0.45rem;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.97rem;
+            color: var(--text);
+            background: #fafaf8;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201,153,58,0.15);
+            background: #fff;
+        }
+
+        .hint {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.8rem 0;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--navy);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.97rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button[type="submit"]:hover {
+            background: #1a3560;
+        }
+
+        button[type="submit"]:active {
+            transform: scale(0.99);
+        }
+
+        .accent-line {
+            width: 40px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 2px;
+            margin: 0.8rem auto 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Scholarship Recommendation System</h1>
-    <form action="/recommend" method="post">
-        <label>Student Index:</label>
-        <input type="number" name="student_index" required><br><br>
+    <div class="wrapper">
+        <div class="header">
+            <span class="badge">AI-Powered</span>
+            <h1>Scholarship Finder</h1>
+            <div class="accent-line"></div>
+            <p style="margin-top:1rem;">Enter your academic profile to discover matching scholarships.</p>
+        </div>
 
-        <label>CGPA:</label>
-        <input type="text" name="cgpa" required><br><br>
+        <div class="card">
+            <form action="/recommend" method="post">
+                <div class="field">
+                    <label for="student_index">Student Index</label>
+                    <input type="number" id="student_index" name="student_index" placeholder="e.g. 0" required>
+                    <div class="hint">Your record number in the dataset</div>
+                </div>
 
-        <label>Family Income:</label>
-        <input type="text" name="income" required><br><br>
+                <div class="field">
+                    <label for="cgpa">CGPA</label>
+                    <input type="text" id="cgpa" name="cgpa" placeholder="e.g. 3.75" required>
+                    <div class="hint">Cumulative Grade Point Average (0.0 – 4.0)</div>
+                </div>
 
-        <button type="submit">Get Recommendations</button>
-    </form>
+                <div class="field">
+                    <label for="income">Family Income (ETB)</label>
+                    <input type="text" id="income" name="income" placeholder="e.g. 25000" required>
+                    <div class="hint">Annual household income</div>
+                </div>
+
+                <hr class="divider">
+
+                <button type="submit">Get Recommendations &rarr;</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
