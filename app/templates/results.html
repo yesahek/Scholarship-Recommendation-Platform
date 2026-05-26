@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scholarship Results</title>
+</head>
+<body>
+    <h1>Recommendations for Student {{ student_index }}</h1>
+    <p>CGPA: {{ cgpa }} | Family Income: {{ income }}</p>
+
+    <h2>Top Scholarships:</h2>
+    <ul>
+        {% for rec in recommendations %}
+            <li>{{ rec["scholarship"] }} (Score: {{ rec["score"] }})</li>
+        {% endfor %}
+    </ul>
+
+    <a href="/">Back</a>
+</body>
+</html>
+
