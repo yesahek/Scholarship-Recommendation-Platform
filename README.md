@@ -1,4 +1,6 @@
 # 🎓 Scholarship Recommendation System
+Link => https://scholarship-recommendation-platform.onrender.com/
+<img width="1348" height="646" alt="image" src="https://github.com/user-attachments/assets/b25a1c1f-be88-4bd5-a0e2-6a80b907913e" />
 
 An AI-powered web app that matches students to scholarships using **Sentence-BERT** semantic similarity. Built with FastAPI and deployed on Render.
 
