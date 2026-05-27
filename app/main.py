@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import pickle
 from pathlib import Path
-from sentence_transformers import util
+from sentence_transformers import SentenceTransformer, util
 
 app = FastAPI(title="Scholarship Recommendation Web App")
 
@@ -13,6 +13,9 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
 
 # Load pre-computed embeddings and scholarship list
 model_path = BASE_DIR / "workspace" / "Models" / "sbert"
+
+# Load SBERT model to encode live student profiles at request time
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 with open(model_path / "profile_embeddings.pkl", "rb") as f:
     profile_embeddings = pickle.load(f)
@@ -41,17 +44,18 @@ def home(request: Request):
 @app.post("/recommend", response_class=HTMLResponse)
 def recommend(
     request: Request,
-    student_index: int = Form(...),
     cgpa: float = Form(...),
     income: int = Form(...)
 ):
-    scores = similarity_scores[student_index].cpu().tolist()
-    ranked = sorted(list(enumerate(scores)), key=lambda x: x[1], reverse=True)
+    # Build a natural-language profile and encode it on the fly
+    query = f"Student with CGPA {cgpa} and family income {income}"
+    profile_embedding = model.encode(query, convert_to_tensor=True)
+    scores = util.cos_sim(profile_embedding, scholarship_embeddings)[0].cpu().tolist()
 
+    ranked = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
     results = []
     for i, score in ranked[:3]:
         sch = scholarships[i]
-        # Eligibility filters
         if "CGPA above 3.5" in sch and cgpa < 3.5:
             continue
         if "income below 30,000" in sch and income > 30000:
@@ -62,7 +66,6 @@ def recommend(
         name="results.html",
         context={
             "request": request,
-            "student_index": student_index,
             "cgpa": cgpa,
             "income": income,
             "recommendations": results
