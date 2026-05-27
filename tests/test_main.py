@@ -2,15 +2,18 @@
 Tests for the Scholarship Recommendation API.
 Run with:  pytest tests/ -v
 """
-import pytest
-from unittest.mock import patch, MagicMock
-import torch
-from fastapi.testclient import TestClient
+import pickle
+import sys
+import types
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+import pytest
+import torch
 
 # ---------------------------------------------------------------------------
-# Mocks — patch heavy ML objects before importing the app so tests run fast
-# without loading real .pkl files or GPU tensors.
+# Mocks — we patch only pickle.load so the real filesystem (templates, etc.)
+# stays untouched.  A fresh module import is forced each time via sys.modules.
 # ---------------------------------------------------------------------------
 
 MOCK_SCHOLARSHIPS = [
@@ -19,7 +22,6 @@ MOCK_SCHOLARSHIPS = [
     "Networking and Cybersecurity Scholarship for students interested in security",
 ]
 
-# 5 students × 3 scholarships, all scores identical for simplicity
 MOCK_SIMILARITY = torch.tensor(
     [
         [0.90, 0.80, 0.70],
@@ -30,22 +32,37 @@ MOCK_SIMILARITY = torch.tensor(
     ]
 )
 
+_pickle_call_count = 0
+
+def _fake_pickle_load(f):
+    global _pickle_call_count
+    _pickle_call_count += 1
+    if _pickle_call_count == 1:
+        return MagicMock()           # profile_embeddings
+    elif _pickle_call_count == 2:
+        return MagicMock()           # scholarship_embeddings
+    else:
+        return MOCK_SCHOLARSHIPS     # scholarships list
+
 
 @pytest.fixture(scope="module")
 def client():
-    """Create a TestClient with ML objects mocked out."""
+    global _pickle_call_count
+    _pickle_call_count = 0
+
+    # Remove cached module so patches apply cleanly
+    for key in list(sys.modules.keys()):
+        if "app.main" in key or key == "app":
+            del sys.modules[key]
+
     with (
-        patch("builtins.open", MagicMock()),
-        patch("pickle.load", side_effect=[
-            MagicMock(),          # profile_embeddings
-            MagicMock(),          # scholarship_embeddings
-            MOCK_SCHOLARSHIPS,    # scholarships list
-        ]),
+        patch("pickle.load", side_effect=_fake_pickle_load),
         patch(
             "sentence_transformers.util.cos_sim",
             return_value=MOCK_SIMILARITY,
         ),
     ):
+        from fastapi.testclient import TestClient
         from app.main import app
         yield TestClient(app)
 
@@ -78,20 +95,18 @@ def test_home_returns_html(client):
 # ---------------------------------------------------------------------------
 
 def test_recommend_high_cgpa_high_income(client):
-    """Student with high CGPA and high income: CGPA scholarship passes, income one filtered."""
+    """High CGPA passes CGPA filter; high income blocks need-based scholarship."""
     resp = client.post(
         "/recommend",
         data={"student_index": 0, "cgpa": 3.8, "income": 50000},
     )
     assert resp.status_code == 200
-    # CGPA scholarship should appear (score 0.90, cgpa ok)
     assert "AI and Machine Learning" in resp.text
-    # Need-based scholarship must NOT appear (income > 30 000)
     assert "Need-based" not in resp.text
 
 
 def test_recommend_low_cgpa_low_income(client):
-    """Student with low CGPA and low income: income scholarship passes, CGPA one filtered."""
+    """Low CGPA blocks CGPA scholarship; low income passes need-based one."""
     resp = client.post(
         "/recommend",
         data={"student_index": 1, "cgpa": 3.0, "income": 20000},
@@ -117,7 +132,7 @@ def test_recommend_shows_student_profile(client):
 # ---------------------------------------------------------------------------
 
 def test_recommend_boundary_cgpa_exactly_35(client):
-    """CGPA exactly 3.5 should NOT be filtered (condition is < 3.5)."""
+    """CGPA exactly 3.5 should NOT be filtered (condition is cgpa < 3.5)."""
     resp = client.post(
         "/recommend",
         data={"student_index": 0, "cgpa": 3.5, "income": 50000},
@@ -127,7 +142,7 @@ def test_recommend_boundary_cgpa_exactly_35(client):
 
 
 def test_recommend_boundary_income_exactly_30000(client):
-    """Income exactly 30 000 should NOT be filtered (condition is > 30 000)."""
+    """Income exactly 30 000 should NOT be filtered (condition is income > 30 000)."""
     resp = client.post(
         "/recommend",
         data={"student_index": 1, "cgpa": 2.9, "income": 30000},
