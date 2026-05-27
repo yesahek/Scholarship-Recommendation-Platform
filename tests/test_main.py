@@ -4,8 +4,6 @@ Run with:  pytest tests/ -v
 """
 import pickle
 import sys
-import types
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
