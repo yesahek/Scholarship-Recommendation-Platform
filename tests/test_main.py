@@ -2,7 +2,6 @@
 Tests for the Scholarship Recommendation API.
 Run with:  pytest tests/ -v
 """
-import pickle
 import sys
 from unittest.mock import MagicMock, patch
 
